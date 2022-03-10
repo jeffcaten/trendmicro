@@ -127,14 +127,19 @@ while ($loopStatus -eq 0) {
             $hostID = $item.ID
             $item.hostname
             $results = computerIpsRuleRecommendationFunction $item.ID
-            #$results.recommendedToAssignRuleIDs
-            #$results.recommendedToUnassignRuleIDs
+            $recommendedToAssignRuleIDs = $results.recommendedToAssignRuleIDs | measure
+            $recommendedToUnassignRuleIDs = $results.recommendedToUnassignRuleIDs| measure
+            [PSCustomObject]@{
+                hostID = $hostID
+                hostname = $item.hostname 
+                recommendedToAssignRuleIdCount = $recommendedToAssignRuleIDs.Count
+                recommendedToUnassignRuleIdCount = $recommendedToUnassignRuleIDs.Count
+                LinkToComputer = "https://cloudone.trendmicro.com/_workload_iframe/ComputerEditor.screen?hostID="+$hostID
+
+                } | Export-Csv C:\temp\ipsRuleRecommendation.csv -notype -Append 
         } 
     }
     else {
         $loopStatus = 1
     }    
 }
-
-# ToDo
-# Write to CSV some how
