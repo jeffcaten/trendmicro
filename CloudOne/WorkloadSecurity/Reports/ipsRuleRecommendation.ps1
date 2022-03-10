@@ -124,10 +124,24 @@ function computerIpsRuleRecommendationFunction {
 $loopStatus = 0
 $hostID = 0
 while ($loopStatus -eq 0) {
+    # Search for computer in C1WS account
     $computerSearchResutls = computerSearchFunction $hostID
+
+    # Count the number of computers returned to give the user some feedback.
+    $computerCount = $computerSearchResutls.computers | Measure-Object
+    if ($computerCount.count -gt 0) {
+        write-host "Processing"$computerCount.count "computer objects"
+    }
+    else {
+        Write-host "Script no more computers found.  Script complete."
+    }
+
+    # Loop through the returned computer object
     if ($computerSearchResutls.computers) {
         foreach ($item in $computerSearchResutls.computers) {
             $hostID = $item.ID
+
+            # Check if there are any rule that are recommended to be assigned/unassigned
             $results = computerIpsRuleRecommendationFunction $item.ID
             $recommendedToAssignRuleIDs = $results.recommendedToAssignRuleIDs | Measure-Object
             $recommendedToUnassignRuleIDs = $results.recommendedToUnassignRuleIDs| Measure-Object
@@ -150,5 +164,3 @@ while ($loopStatus -eq 0) {
 
 # ToDo
 # Test on powershell v5
-# Add Some output for the user
-# specify a better output location
