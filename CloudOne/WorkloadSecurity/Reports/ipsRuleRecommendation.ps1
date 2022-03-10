@@ -94,26 +94,28 @@ function computerSearchFunction {
         sortByObjectID = 'true'
     }
     $computerSearchBody = $computerSearchHash | ConvertTo-Json
-    $computerSearchURL = $baseUrl+"computers/search?expand=none"
+    $computerSearchURL = $baseUrl+"/computers/search?expand=none"
     
     $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
     return $computerSearchResults
 }
 
 $c1Region = getApiKeyRegionFunction $apikey
+# Base Url for API Queries
+$baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
 
 function computerIpsRuleRecommendationFunction {
     param (
         [Parameter(Mandatory=$true)][string]$hostID
     )
 
-    $response = Invoke-WebRequest -Uri 'https://workload.us-1.cloudone.trendmicro.com/api/computers/129462/intrusionprevention/assignments' -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
     return $response
 }
 
-# Base Url for API Queries
-$baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api/"
 
+
+# Loop through all computers and output CSV.
 $loopStatus = 0
 $hostID = 0
 while ($loopStatus -eq 0) {
@@ -124,6 +126,8 @@ while ($loopStatus -eq 0) {
             $results = computerIpsRuleRecommendationFunction $item.ID
             $recommendedToAssignRuleIDs = $results.recommendedToAssignRuleIDs | Measure-Object
             $recommendedToUnassignRuleIDs = $results.recommendedToUnassignRuleIDs| Measure-Object
+
+            # Map data to columns and export data to CSV
             [PSCustomObject]@{
                 hostID = $hostID
                 hostname = $item.hostname 
@@ -131,10 +135,14 @@ while ($loopStatus -eq 0) {
                 recommendedToUnassignRuleIdCount = $recommendedToUnassignRuleIDs.Count
                 LinkToComputer = "https://cloudone.trendmicro.com/_workload_iframe/ComputerEditor.screen?hostID="+$hostID
 
-                } | Export-Csv C:\temp\ipsRuleRecommendation.csv -notype -Append 
+            } | Export-Csv C:\temp\ipsRuleRecommendation.csv -notype -Append 
         } 
     }
     else {
         $loopStatus = 1
     }    
 }
+
+# ToDo
+# Test on powershell v5
+# 
