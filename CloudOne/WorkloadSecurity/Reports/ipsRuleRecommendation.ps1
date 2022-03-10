@@ -32,6 +32,11 @@ $ProgressPreference = 'SilentlyContinue'
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true}
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$reportTime = get-date -f yyyy-MM-dd-HHmmss
+$reportName = ".\ipsRuleRecommendation - $reportTime"
+
+$reportFile = $reportName + ".csv"
+
 # Headers to use for all API queries
 $headers = @{
     "Api-Version" = "v1"
@@ -135,7 +140,7 @@ while ($loopStatus -eq 0) {
                 recommendedToUnassignRuleIdCount = $recommendedToUnassignRuleIDs.Count
                 LinkToComputer = "https://cloudone.trendmicro.com/_workload_iframe/ComputerEditor.screen?hostID="+$hostID
 
-            } | Export-Csv C:\temp\ipsRuleRecommendation.csv -notype -Append 
+            } | Export-Csv $reportFile -notype -Append 
         } 
     }
     else {
