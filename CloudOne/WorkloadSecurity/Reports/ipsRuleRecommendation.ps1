@@ -19,7 +19,7 @@ Example CSV Output:
 
 #>
 
-#requires -version 5.0
+#requires -version 7.2.1
 
 param (
     [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey
@@ -145,4 +145,5 @@ while ($loopStatus -eq 0) {
 
 # ToDo
 # Test on powershell v5
-# 
+# Add Some output for the user
+# specify a better output location
