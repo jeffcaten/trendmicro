@@ -133,7 +133,7 @@ while ($loopStatus -eq 0) {
         write-host "Processing"$computerCount.count "computer objects"
     }
     else {
-        Write-host "Script no more computers found.  Script complete."
+        Write-host "No more computers found.  Script complete."
     }
 
     # Loop through the returned computer object
