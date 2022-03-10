@@ -35,9 +35,6 @@ $ProgressPreference = 'SilentlyContinue'
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true}
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# Disabled the progress bar for invoke-webrequest.  This speeds up the request.
-$ProgressPreference = 'SilentlyContinue'
-
 # Headers to use for all API queries
 $headers = @{
     "Api-Version" = "v1"
