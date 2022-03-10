@@ -1,24 +1,21 @@
 <#
 .SYNOPSIS
-Powershell script is a template.
+List all computers in a Cloud One Account and output IPS rule recommendation.
 
 .DESCRIPTION
-Some Description
-
-.PARAMETER manager
-Not Required.
-The -manager parameter requires a hostname or IP and port in the format hostname.local:4119 or 198.51.100.10:443.
-If this parameter is not supplied this script will assume you are trying to use C1WS.
+This script will list all computers in a Cloud One Workload Security account and output the IPS rules that are recommended to be assigned or unassigned.
 
 .PARAMETER apikey
 Required
-The -apikey parameter requires a Deep Security Manager API key with the full access role.
+The -apikey parameter requires a CLoud One API Key
 
 .EXAMPLE
-.\template.ps1 -apikey <API-Key>
+.\ipsRuleRecommendation.ps1 -apikey <API-Key>
 
 .NOTES
-Example Script Output:
+Example CSV Output:
+"hostID","hostname","recommendedToAssignRuleIdCount","recommendedToUnassignRuleIdCount","LinkToComputer"
+"129431","ip-172-31-33-145.ec2.internal","11","0","https://cloudone.trendmicro.com/_workload_iframe/ComputerEditor.screen?hostID=129431"
 
 #>
 
@@ -123,12 +120,10 @@ while ($loopStatus -eq 0) {
     $computerSearchResutls = computerSearchFunction $hostID
     if ($computerSearchResutls.computers) {
         foreach ($item in $computerSearchResutls.computers) {
-            $item.ID
             $hostID = $item.ID
-            $item.hostname
             $results = computerIpsRuleRecommendationFunction $item.ID
-            $recommendedToAssignRuleIDs = $results.recommendedToAssignRuleIDs | measure
-            $recommendedToUnassignRuleIDs = $results.recommendedToUnassignRuleIDs| measure
+            $recommendedToAssignRuleIDs = $results.recommendedToAssignRuleIDs | Measure-Object
+            $recommendedToUnassignRuleIDs = $results.recommendedToUnassignRuleIDs| Measure-Object
             [PSCustomObject]@{
                 hostID = $hostID
                 hostname = $item.hostname 
