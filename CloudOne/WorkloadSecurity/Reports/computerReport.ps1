@@ -14,8 +14,8 @@ The -apikey parameter requires a CLoud One API Key
 
 .NOTES
 Example CSV Output:
-"hostID","hostname"
-"129431","ip-172-31-33-145.ec2.internal"
+"hostID","hostname","provider","instanceID","platform","agentVersion","agentStatusMessages","antiMalwareState","webReputationState","activityMonitoringState","firewallState","intrusionPreventionState","integrityMonitoringState","logInspectionState","applicationControlState"
+"87802","gc2-win2012-instance","GCP","885759568703017250","Microsoft Windows Server 2012 R2","0.0.0.0","Unmanaged (VM Stopped)","Not Activated","Not Activated","Not Activated","Not Activated","Not Activated","Not Activated","Not Activated","Not Activated"
 
 #>
 
@@ -190,7 +190,7 @@ while ($loopStatus -eq 0) {
                 intrusionPreventionState = $item.intrusionPrevention.moduleStatus.agentStatusMessage
                 integrityMonitoringState = $item.integrityMonitoring.moduleStatus.agentStatusMessage
                 logInspectionState = $item.logInspection.moduleStatus.agentStatusMessage
-                applicationControl = $item.applicationControl.moduleStatus.agentStatusMessage
+                applicationControlState = $item.applicationControl.moduleStatus.agentStatusMessage
             } | Export-Csv $reportFile -notype -Append 
         } 
     }
