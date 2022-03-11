@@ -99,10 +99,50 @@ function computerSearchFunction {
         sortByObjectID = 'true'
     }
     $computerSearchBody = $computerSearchHash | ConvertTo-Json
-    $computerSearchURL = $baseUrl+"/computers/search?expand=none"
+    $computerSearchURL = $baseUrl+"/computers/search"
     
     $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
     return $computerSearchResults
+}
+
+function computerConnectorInformationFunction {
+    param (
+        [Parameter(Mandatory=$true)][string]$computer
+    )
+    if ($item.azureARMVirtualMachineSummary) {
+        $instanceID = $item.azureARMVirtualMachineSummary.instanceID
+        $provider = "Azure"
+    }
+    if ($item.azureVMVirtualMachineSummary) {
+        $instanceID = $item.azureVMVirtualMachineSummary.instanceID
+        $provider = "Azure"
+    }
+    if ($item.ec2VirtualMachineSummary) {
+        $instanceID = $item.ec2VirtualMachineSummary.instanceID
+        $provider = "AWS"
+    }
+    if ($item.gcpVirtualMachineSummary) {
+        $instanceID = $item.gcpVirtualMachineSummary.instanceID
+        $provider = "GCP"
+    }
+    if ($item.noConnectorVirtualMachineSummary) {
+        $instanceID = $item.noConnectorVirtualMachineSummary.instanceID
+        $provider = "noConnector"
+    }
+    if ($item.vcloudVMVirtualMachineSummary) {
+        $instanceID = $item.vcloudVMVirtualMachineSummary.instanceID
+        $provider = "vCloud"
+    }
+    if ($item.vmwareVMVirtualMachineSummary) {
+        $instanceID = $item.vmwareVMVirtualMachineSummary.instanceID
+        $provider = "vCenter"
+    }
+    $returnArray = @()
+
+    $returnArray += $instanceID
+    $returnArray += $provider
+  
+    return ,$returnArray
 }
 
 $c1Region = getApiKeyRegionFunction $apikey
@@ -128,12 +168,29 @@ while ($loopStatus -eq 0) {
     # Loop through the returned computer object
     if ($computerSearchResutls.computers) {
         foreach ($item in $computerSearchResutls.computers) {
+            $hostID = $item.ID
+           
+            $connectorInformationResults = computerConnectorInformationFunction $item
+            $instanceID = $connectorInformationResults[0]
+            $provider = $connectorInformationResults[1]
 
             # Map data to columns and export data to CSV
             [PSCustomObject]@{
                 hostID = $item.ID
-                hostname = $item.hostname 
-
+                hostname = $item.hostname
+                provider = $provider
+                instanceID = $instanceID
+                platform = $item.platform
+                agentVersion = $item.agentVersion
+                agentStatusMessages = [string]$item.computerStatus.agentStatusMessages
+                antiMalwareState = $item.antiMalware.moduleStatus.agentStatusMessage
+                webReputationState = $item.webReputation.moduleStatus.agentStatusMessage
+                activityMonitoringState = $item.activityMonitoring.moduleStatus.agentStatusMessage
+                firewallState =  $item.firewall.moduleStatus.agentStatusMessage
+                intrusionPreventionState = $item.intrusionPrevention.moduleStatus.agentStatusMessage
+                integrityMonitoringState = $item.integrityMonitoring.moduleStatus.agentStatusMessage
+                logInspectionState = $item.logInspection.moduleStatus.agentStatusMessage
+                applicationControl = $item.applicationControl.moduleStatus.agentStatusMessage
             } | Export-Csv $reportFile -notype -Append 
         } 
     }
