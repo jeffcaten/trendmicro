@@ -1,4 +1,4 @@
 # Ignore CSV FIles
 *.csv
 # Include example CSV for script
-!trendmicro\CloudOne\WorkloadSecurity\ApplicationControl\GlobalRules\createGlobalRules.csv
+!createGlobalRules.csv
