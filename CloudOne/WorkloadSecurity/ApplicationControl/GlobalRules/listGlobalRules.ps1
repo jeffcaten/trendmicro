@@ -88,7 +88,7 @@ function acGlobalRulesSearchFunction {
         [Parameter(Mandatory=$true)][string]$idValue
     )
     
-    $computerSearchHash = @{
+    $searchHash = @{
         maxItems = "5000"
         searchCriteria = @(
             @{
@@ -98,11 +98,11 @@ function acGlobalRulesSearchFunction {
         )
         sortByObjectID = 'true'
     }
-    $computerSearchBody = $computerSearchHash | ConvertTo-Json
-    $computerSearchURL = $baseUrl+"/applicationcontrolglobalrules/search"
+    $searchBody = $searchHash | ConvertTo-Json
+    $searchURL = $baseUrl+"/applicationcontrolglobalrules/search"
     
-    $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
-    return $computerSearchResults
+    $searchResults = Invoke-WebRequest -Uri $searchURL -Method Post -ContentType "application/json" -Headers $headers -Body $searchBody  | ConvertFrom-Json
+    return $searchResults
 }
 
 
