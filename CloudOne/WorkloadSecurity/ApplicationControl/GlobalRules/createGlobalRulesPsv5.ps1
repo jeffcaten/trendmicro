@@ -97,7 +97,7 @@ function createAcGlobalRuleFunction {
     $body = $bodyHash | ConvertTo-Json
     $searchURL = $baseUrl+"/applicationcontrolglobalrules"
     
-    $searchResults = Invoke-WebRequest -Uri $searchURL -Method Post -ContentType "application/json" -Headers $headers -Body $body -SkipHttpErrorCheck   | ConvertFrom-Json
+    $searchResults = Invoke-WebRequest -Uri $searchURL -Method Post -ContentType "application/json" -Headers $headers -Body $body | ConvertFrom-Json
     return $searchResults
 }
 get-date
