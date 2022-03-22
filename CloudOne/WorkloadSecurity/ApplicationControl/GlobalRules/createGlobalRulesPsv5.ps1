@@ -79,6 +79,28 @@ function getApiKeyRegionFunction {
     return $c1Region
 }
 
+function searchAcGlobalRuleFunction {
+    param (
+        [Parameter(Mandatory=$true)][string]$sha256
+    )
+
+    $bodyHash = @{
+        maxItems = "1"
+        searchCriteria = @(
+            @{
+                fieldName = 'sha256'
+                stringTest = 'equal'
+                stringValue = $sha256
+            }
+        )
+    }
+    $body = $bodyHash | ConvertTo-Json
+    $searchURL = $baseUrl+"/applicationcontrolglobalrules/search"
+    
+    $searchResults = Invoke-WebRequest -Uri $searchURL -Method Post -ContentType "application/json" -Headers $headers -Body $body | ConvertFrom-Json
+    return $searchResults    
+}
+
 function createAcGlobalRuleFunction {
     param (
         [Parameter(Mandatory=$true)][string]$sha256,
@@ -102,14 +124,22 @@ function createAcGlobalRuleFunction {
 }
 get-date
 
-$c1Region = getApiKeyRegionFunction $apikey
+#$c1Region = getApiKeyRegionFunction $apikey
+$c1Region = "us-1"
 # Base Url for API Queries
 $baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
 
 $globalRules = Import-Csv ".\createGlobalRules.csv"
 
 foreach ($item in $globalRules) {
-    createAcGlobalRuleFunction $item.sha256 $item.description    
+    $searchAcGlobalRuleFunctionResults = searchAcGlobalRuleFunction $item.sha256
+    if ([string]$item.sha256 -eq [string]$searchAcGlobalRuleFunctionResults.applicationControlGlobalRules.sha256) {
+        write-host "Sha256 exists"
+    }
+    else {
+        write-host "Sha256 needs to be added"
+        $createAcGlobalRuleFunctionResults = createAcGlobalRuleFunction $item.sha256 $item.description
+    }
 }
 
 get-date
