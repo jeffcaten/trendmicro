@@ -32,7 +32,10 @@ if ($proxyUri) {
     $passwordinput = Read-host "Password for Proxy" -AsSecureString
     $password = $passwordinput | ConvertTo-SecureString -asPlainText -Force
     $proxyCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $proxyUser, $password
-    
+    $proxyStatus = "1"
+}
+else {
+    $proxyStatus = "0"
 }
 
 
@@ -66,7 +69,13 @@ function getApiKeyRegionFunction {
 
     # Describe API key to get region
     $describeApiKeyUrl = "https://accounts.cloudone.trendmicro.com/api/apikeys/$apiKeyID"
-    $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    #$response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    }
+    else {
+        $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    }
     $apiKeyUrn = $response.urn
     if ($apiKeyUrn -match "us-1") {
         $c1Region = "us-1"
@@ -115,7 +124,12 @@ function computerSearchFunction {
 
     write-host $computerSearchURL
     
-    $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody -Proxy $proxyUri -ProxyCredential $proxyCredentials  | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody -Proxy $proxyUri -ProxyCredential $proxyCredentials  | ConvertFrom-Json
+    }
+    else {
+        $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
+    }
     return $computerSearchResults
 }
 
@@ -126,8 +140,12 @@ function computerIpsRuleRecommendationFunction {
     param (
         [Parameter(Mandatory=$true)][string]$hostID
     )
-
-    $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    }
+    else {
+        $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json    
+    }
     return $response
 }
 
