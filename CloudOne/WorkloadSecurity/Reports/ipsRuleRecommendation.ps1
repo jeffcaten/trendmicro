@@ -112,12 +112,13 @@ function computerSearchFunction {
     }
     $computerSearchBody = $computerSearchHash | ConvertTo-Json
     $computerSearchURL = $baseUrl+"/computers/search?expand=none"
+
+    write-host $computerSearchURL
     
     $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
     return $computerSearchResults
 }
 
-$c1Region = getApiKeyRegionFunction $apikey
 # Base Url for API Queries
 $baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
 
