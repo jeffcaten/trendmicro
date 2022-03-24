@@ -19,11 +19,26 @@ Example CSV Output:
 
 #>
 
-#requires -version 7.2.1
+#requires -version 5
 
 param (
-    [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey
+    [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey,
+    [Parameter(Mandatory=$false, HelpMessage="Region")][string]$c1Region,
+    [Parameter(Mandatory=$false)][string]$proxyUri,
+    [Parameter(Mandatory=$false)][string]$proxyUser
 )
+
+if ($proxyUri) {
+    $passwordinput = Read-host "Password for Proxy" -AsSecureString
+    $password = $passwordinput | ConvertTo-SecureString -asPlainText -Force
+    $proxyCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $proxyUser, $password
+    $proxyStatus = "1"
+}
+else {
+    $proxyStatus = "0"
+}
+
+
 
 # Remove progress bar for web requests
 $ProgressPreference = 'SilentlyContinue'
@@ -54,7 +69,13 @@ function getApiKeyRegionFunction {
 
     # Describe API key to get region
     $describeApiKeyUrl = "https://accounts.cloudone.trendmicro.com/api/apikeys/$apiKeyID"
-    $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    #$response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    }
+    else {
+        $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    }
     $apiKeyUrn = $response.urn
     if ($apiKeyUrn -match "us-1") {
         $c1Region = "us-1"
@@ -100,12 +121,18 @@ function computerSearchFunction {
     }
     $computerSearchBody = $computerSearchHash | ConvertTo-Json
     $computerSearchURL = $baseUrl+"/computers/search?expand=none"
+
+    write-host $computerSearchURL
     
-    $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody -Proxy $proxyUri -ProxyCredential $proxyCredentials  | ConvertFrom-Json
+    }
+    else {
+        $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
+    }
     return $computerSearchResults
 }
 
-$c1Region = getApiKeyRegionFunction $apikey
 # Base Url for API Queries
 $baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
 
@@ -113,12 +140,18 @@ function computerIpsRuleRecommendationFunction {
     param (
         [Parameter(Mandatory=$true)][string]$hostID
     )
-
-    $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    if ($proxyStatus -eq 1) {
+        $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
+    }
+    else {
+        $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json    
+    }
     return $response
 }
 
-
+if ($c1Region -eq "") {
+    $c1Region = getApiKeyRegionFunction $apikey
+}
 
 # Loop through all computers and output CSV.
 $loopStatus = 0
