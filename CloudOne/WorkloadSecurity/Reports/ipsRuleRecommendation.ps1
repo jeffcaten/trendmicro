@@ -19,7 +19,7 @@ Example CSV Output:
 
 #>
 
-#requires -version 7.2.1
+#requires -version 5
 
 param (
     [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey,
@@ -29,10 +29,10 @@ param (
 )
 
 if ($proxyUri) {
-    $proxyPasswordInput = Read-host "Password for Deep Security Manager" -AsSecureString
-    $proxyPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($proxyPasswordInput))
-    $proxyCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $proxyUser, $proxyPassword
-    #Invoke-WebRequest https://<uri> -Proxy $proxyUri -ProxyCredential $proxyCredentials
+    $passwordinput = Read-host "Password for Proxy" -AsSecureString
+    $password = $passwordinput | ConvertTo-SecureString -asPlainText -Force
+    $proxyCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $proxyUser, $password
+    
 }
 
 
@@ -66,7 +66,7 @@ function getApiKeyRegionFunction {
 
     # Describe API key to get region
     $describeApiKeyUrl = "https://accounts.cloudone.trendmicro.com/api/apikeys/$apiKeyID"
-    $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    $response = Invoke-WebRequest -Uri $describeApiKeyUrl -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
     $apiKeyUrn = $response.urn
     if ($apiKeyUrn -match "us-1") {
         $c1Region = "us-1"
@@ -115,7 +115,7 @@ function computerSearchFunction {
 
     write-host $computerSearchURL
     
-    $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody  | ConvertFrom-Json
+    $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody -Proxy $proxyUri -ProxyCredential $proxyCredentials  | ConvertFrom-Json
     return $computerSearchResults
 }
 
@@ -127,7 +127,7 @@ function computerIpsRuleRecommendationFunction {
         [Parameter(Mandatory=$true)][string]$hostID
     )
 
-    $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers | ConvertFrom-Json
+    $response = Invoke-WebRequest -Uri "$baseUrl/computers/$hostID/intrusionprevention/assignments" -Method Get -ContentType "application/json" -Headers $headers -Proxy $proxyUri -ProxyCredential $proxyCredentials | ConvertFrom-Json
     return $response
 }
 
