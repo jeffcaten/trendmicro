@@ -119,7 +119,9 @@ function computerIpsRuleRecommendationFunction {
     return $response
 }
 
-
+if ($c1Region -eq "") {
+    $c1Region = getApiKeyRegionFunction $apikey
+}
 
 # Loop through all computers and output CSV.
 $loopStatus = 0
