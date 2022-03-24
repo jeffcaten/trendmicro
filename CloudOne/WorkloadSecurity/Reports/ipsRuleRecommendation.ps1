@@ -31,7 +31,10 @@ param (
 if ($proxyUri) {
     $proxyPasswordInput = Read-host "Password for Deep Security Manager" -AsSecureString
     $proxyPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($proxyPasswordInput))
+    $proxyCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $proxyUser, $proxyPassword
+    #Invoke-WebRequest https://<uri> -Proxy $proxyUri -ProxyCredential $proxyCredentials
 }
+
 
 
 # Remove progress bar for web requests
