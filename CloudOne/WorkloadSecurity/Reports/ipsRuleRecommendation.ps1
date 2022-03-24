@@ -22,7 +22,8 @@ Example CSV Output:
 #requires -version 7.2.1
 
 param (
-    [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey
+    [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey,
+    [Parameter(Mandatory=$false, HelpMessage="Region")][string]$c1Region
 )
 
 # Remove progress bar for web requests
