@@ -23,8 +23,16 @@ Example CSV Output:
 
 param (
     [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey,
-    [Parameter(Mandatory=$false, HelpMessage="Region")][string]$c1Region
+    [Parameter(Mandatory=$false, HelpMessage="Region")][string]$c1Region,
+    [Parameter(Mandatory=$false)][string]$proxyUri,
+    [Parameter(Mandatory=$false)][string]$proxyUser
 )
+
+if ($proxyUri) {
+    $proxyPasswordInput = Read-host "Password for Deep Security Manager" -AsSecureString
+    $proxyPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($proxyPasswordInput))
+}
+
 
 # Remove progress bar for web requests
 $ProgressPreference = 'SilentlyContinue'
