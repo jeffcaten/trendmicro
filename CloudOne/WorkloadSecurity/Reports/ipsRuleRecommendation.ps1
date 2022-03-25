@@ -121,8 +121,6 @@ function computerSearchFunction {
     }
     $computerSearchBody = $computerSearchHash | ConvertTo-Json
     $computerSearchURL = $baseUrl+"/computers/search?expand=none"
-
-    write-host $computerSearchURL
     
     if ($proxyStatus -eq 1) {
         $computerSearchResults = Invoke-WebRequest -Uri $computerSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $computerSearchBody -Proxy $proxyUri -ProxyCredential $proxyCredentials  | ConvertFrom-Json
