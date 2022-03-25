@@ -23,8 +23,8 @@ Example CSV Output:
 
 param (
     [Parameter(Mandatory=$true, HelpMessage="Cloud One API Key")][string]$apikey,
-    [Parameter(Mandatory=$false, HelpMessage="Region")][string]$c1Region,
-    [Parameter(Mandatory=$false)][string]$proxyUri,
+    [Parameter(Mandatory=$false, HelpMessage="Region, ex. us-1")][string]$c1Region,
+    [Parameter(Mandatory=$false, HelpMessage="http://proxy.hostname:3128/")][string]$proxyUri,
     [Parameter(Mandatory=$false)][string]$proxyUser
 )
 
@@ -133,9 +133,6 @@ function computerSearchFunction {
     return $computerSearchResults
 }
 
-# Base Url for API Queries
-$baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
-
 function computerIpsRuleRecommendationFunction {
     param (
         [Parameter(Mandatory=$true)][string]$hostID
@@ -152,6 +149,9 @@ function computerIpsRuleRecommendationFunction {
 if ($c1Region -eq "") {
     $c1Region = getApiKeyRegionFunction $apikey
 }
+
+# Base Url for API Queries
+$baseUrl = "https://workload.$c1Region.cloudone.trendmicro.com/api"
 
 # Loop through all computers and output CSV.
 $loopStatus = 0
@@ -194,6 +194,3 @@ while ($loopStatus -eq 0) {
         $loopStatus = 1
     }    
 }
-
-# ToDo
-# Test on powershell v5
