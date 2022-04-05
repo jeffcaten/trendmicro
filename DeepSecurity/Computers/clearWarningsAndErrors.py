@@ -12,8 +12,8 @@ session.verify = False
 transport = Transport(session=session)
 urllib3.disable_warnings()
 
-manager = input ("Ender DSM Hostname and Port, ex: dsm.lab.local:4119: ")
-apiKey = input ("Enter Cloud One ApiKey: ")
+manager = input ("Enter Deep Security Manager Hostname and Port, ex: dsm.lab.local:4119: ")
+apiKey = input ("Enter Deep Security Manager API Key: ")
 alertToClear = input ("Enter Alert to clear: ")
 username = input ("Enter Username: ")
 password = input ("Enter Password: ")
