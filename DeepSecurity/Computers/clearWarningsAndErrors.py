@@ -24,7 +24,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-# Inspec wsdl: python3 -mzeep https://'+manager+'/webservice/Manager?WSDL
+# Inspect wsdl: python3 -mzeep https://'+manager+'/webservice/Manager?WSDL
 soapClient = Client('https://'+manager+'/webservice/Manager?WSDL', transport=transport)
 
 try:
