@@ -49,7 +49,7 @@ test02, Delete temp API Key
 This script should clean up the ApiKeys that it creates.  If the script can't delete the modifyPolicy ApiKey for some reason an adminitrator will need to clean up the left over ApiKey from the effected tenants.
 If this script fails to delete the API key, the API key is set to expire about 30 minutes after it was created.
 #>
-#requires -version 5.0
+#requires -version 7.0
 
 param (
     [Parameter(Mandatory=$true, HelpMessage="FQDN and port for Deep Security Manager; ex dsm.example.com:443--")][string]$manager,
