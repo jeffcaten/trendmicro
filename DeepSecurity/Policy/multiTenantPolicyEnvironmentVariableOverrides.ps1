@@ -58,7 +58,7 @@ param (
 $ProgressPreference = 'SilentlyContinue' 
 
 # Set Cert verification and TLS version to 1.2.
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true}
+#[System.Net.ServicePointManager]::ServerCertificateValidationCallback={$false}
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # Headers to use for all Api queries to T0
@@ -86,7 +86,7 @@ function tenatSearchFunction {
     }
     $tenantSearchBody = $tenantSearchHash | ConvertTo-Json
     
-    $tenantSearchResults = Invoke-WebRequest -Uri $tenantSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $tenantSearchBody   | ConvertFrom-Json
+    $tenantSearchResults = Invoke-WebRequest -Uri $tenantSearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $tenantSearchBody -SkipCertificateCheck  | ConvertFrom-Json
 
     return $tenantSearchResults
 }
@@ -112,7 +112,7 @@ function createTenantApiKeyFunction {
     $createTenantApiKeyBody = $createTenantApiKeyHash | ConvertTo-Json
     
     try {
-        $createTenantApiKeyResults = Invoke-WebRequest -Uri $createTenantApiKeyURL -Method Post -ContentType "application/json" -Headers $headers -Body $createTenantApiKeyBody  | ConvertFrom-Json
+        $createTenantApiKeyResults = Invoke-WebRequest -Uri $createTenantApiKeyURL -Method Post -ContentType "application/json" -Headers $headers -Body $createTenantApiKeyBody -SkipCertificateCheck  | ConvertFrom-Json
     }
     catch {
         $tenantApiKeyCreateStatus = "Failed"
@@ -152,7 +152,7 @@ function deleteTenantApiKey {
 
     $deleteTenantApiKeyURL = "https://$manager/api/apikeys/$apiKeyID"
     try {
-        $deleteTenantApiKeyResults = Invoke-WebRequest -Uri $deleteTenantApiKeyURL -Method DELETE -ContentType "application/json" -Headers $deleteTenantApiKeyheaders
+        $deleteTenantApiKeyResults = Invoke-WebRequest -Uri $deleteTenantApiKeyURL -Method DELETE -ContentType "application/json" -Headers $deleteTenantApiKeyheaders -SkipCertificateCheck
     }
     catch {
         $deleteTenantApiKeyStatus = "Failed"
@@ -189,7 +189,7 @@ function EnvironmentVariableOverridesLookupFunction{
     }
     $policySearchBody = $policySearchHash | ConvertTo-Json
     
-    $policySearchResults = Invoke-WebRequest -Uri $policySearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $policySearchBody   | ConvertFrom-Json
+    $policySearchResults = Invoke-WebRequest -Uri $policySearchURL -Method Post -ContentType "application/json" -Headers $headers -Body $policySearchBody  -SkipCertificateCheck | ConvertFrom-Json
 
     return $policySearchResults
 }
@@ -218,7 +218,7 @@ function policySearchFunction {
     }
     $policySearchBody = $policySearchHash | ConvertTo-Json
     
-    $policySearchResults = Invoke-WebRequest -Uri $policySearchUrl -Method Post -ContentType "application/json" -Headers $policySearchFunctionHeaders -Body $policySearchBody  | ConvertFrom-Json   
+    $policySearchResults = Invoke-WebRequest -Uri $policySearchUrl -Method Post -ContentType "application/json" -Headers $policySearchFunctionHeaders -Body $policySearchBody -SkipCertificateCheck  | ConvertFrom-Json   
 
     return $policySearchResults
 
@@ -248,7 +248,7 @@ function policyModifyFunction {
     }
     $policyModifyBody = $policyModifyHash | ConvertTo-Json
     
-    $policyModifyResults = Invoke-WebRequest -Uri $policyModifyUrl -Method Post -ContentType "application/json" -Headers $policyModifyFunctionHeaders -Body $policyModifyBody  | ConvertFrom-Json 
+    $policyModifyResults = Invoke-WebRequest -Uri $policyModifyUrl -Method Post -ContentType "application/json" -Headers $policyModifyFunctionHeaders -Body $policyModifyBody -SkipCertificateCheck | ConvertFrom-Json 
     return $policyModifyResults
 }
 
