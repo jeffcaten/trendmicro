@@ -21,6 +21,9 @@ The -manager parameter requires a hostname or IP and port in the format hostname
 .PARAMETER apikey
 The -apikey parameter requires a Deep Security Manager API key with the full access role.
 
+.PARAMETER templateTemplateName
+The -templateTemplateName requires the name of a tenant that you want to use as an example for the EVO.
+
 .PARAMETER templatePolicyName
 The -templatePolicyName parameter requires the name of a policy. Example "Base Policy"
 
@@ -51,6 +54,7 @@ If this script fails to delete the API key, the API key is set to expire about 3
 param (
     [Parameter(Mandatory=$true, HelpMessage="FQDN and port for Deep Security Manager; ex dsm.example.com:443--")][string]$manager,
     [Parameter(Mandatory=$true, HelpMessage="Deep Security Manager API Key")][string]$apikey,
+    [Parameter(Mandatory=$true, HelpMessage="Template Policy Name")][string]$tenantTemplateName,
     [Parameter(Mandatory=$true, HelpMessage="Template Policy Name")][string]$templatePolicyName
 )
 
@@ -175,6 +179,11 @@ function EnvironmentVariableOverridesLookupFunction{
         [Parameter(Mandatory=$true, HelpMessage="Deep Security policy name")][string]$policyName
     )
 
+    $headers = @{
+        "api-version" = "v1"
+        "api-secret-key" = $apikey
+    }
+
     $policySearchURL = "https://$manager/api/policies/search"
 
     $policySearchHash = @{
@@ -254,57 +263,87 @@ function policyModifyFunction {
 
 # Search for all tenants in T0
 $tenantSearchResults = tenatSearchFunction $manager
+
+# Loop through all tenants to find the tenant template
+foreach ($tenant in $tenantSearchResults.tenants) {
+    if ($tenant.name -eq $tenantTemplateName) {        
+        $tenantTeamplateID = $tenant.ID
+        write-host $tenantTeamplateID
+        break
+    }
+}
+
+
 write-host "Tenant Name, Message"
 if ($tenantSearchResults.tenants) {
-    write-host "T0, Get environment variable overrides from policy: "$templatePolicyName
-    $policySearchResults = EnvironmentVariableOverridesLookupFunction $manager $apikey $templatePolicyName
-    $templatePolicyName = $policySearchResults.policies.policySettings.platformSettingEnvironmentVariableOverrides.value
-    if($templatePolicyName){
+
+    # Generate API Key for tenant Template
+    $tenantTemplateApiKeyArray = createTenantApiKeyFunction $manager $tenantTeamplateID
+    $tenantTemplateApiKeyID = $tenantTemplateApiKeyArray[0]
+    $tenantTemplateApiKey = $tenantTemplateApiKeyArray[1]
+    $tenantTemplateApiKeyCreateStatus = $tenantTemplateApiKeyArray[2]
+
+    # Get EVO from tenant template policy
+    $policySearchResults = EnvironmentVariableOverridesLookupFunction $manager $tenantTemplateApiKey $templatePolicyName
+    $templatePolicyEVO = $policySearchResults.policies.policySettings.platformSettingEnvironmentVariableOverrides.value
+    
+    if($templatePolicyEVO){
         # Loop Through each tenant
         foreach ($i in $tenantSearchResults.tenants) {
             $tenantID = $i.ID
             $TenantName = $i.name
 
-            write-host $TenantName", Generate temp API Key"
+            # Check to see if the tenant name matches the tenant teamplate.
+            if ($i.name -ne $tenantTemplateName) {
+                write-host $TenantName", Generate temp API Key"
 
-            # Create an API key for each tenant
-            $tenantApiKeyArray = createTenantApiKeyFunction $manager $tenantID
-            # If the createTenantApiKeyFunction was successful then continue on to modify the policy
-            if ($tenantApiKeyArray[0]) {
-                $apiKeyID = $tenantApiKeyArray[0]
-                $tenantApiKey = $tenantApiKeyArray[1]
-                $tenantApiKeyCreateStatus = $tenantApiKeyArray[2]
-                
-                # Search for a policies in tenant
-                write-host $TenantName", Searching for policies"
-                $policySearchResults = policySearchFunction $manager $tenantApiKey
+                # Create an API key for each tenant
+                $tenantApiKeyArray = createTenantApiKeyFunction $manager $tenantID
+                # If the createTenantApiKeyFunction was successful then continue on to modify the policy
+                if ($tenantApiKeyArray[0]) {
+                    $apiKeyID = $tenantApiKeyArray[0]
+                    $tenantApiKey = $tenantApiKeyArray[1]
+                    $tenantApiKeyCreateStatus = $tenantApiKeyArray[2]
+                    
+                    # Search for a policies in tenant
+                    write-host $TenantName", Searching for policies"
+                    $policySearchResults = policySearchFunction $manager $tenantApiKey
 
-                # Loop through each policy to see if the EVO match the templatePolicy
-                foreach ($policy in $policySearchResults.policies) {
-                    $policyID = $policy.ID
-                    if ($policy.policySettings.platformSettingEnvironmentVariableOverrides.value -eq $templatePolicyName) {
-                        write-host $TenantName", Policy already has matching Environment Variable Overrides. Skipping policyID: "$policyID
+                    # Loop through each policy to see if the EVO match the templatePolicy
+                    foreach ($policy in $policySearchResults.policies) {
+                        $policyID = $policy.ID
+                        if ($policy.policySettings.platformSettingEnvironmentVariableOverrides.value -eq $templatePolicyEVO) {
+                            write-host $TenantName", Policy already has matching Environment Variable Overrides. Skipping policyID: "$policyID
+                        }
+                        else{
+                            Write-Host $TenantName", modifying policyID: "$policyID
+                            $policyModifyResults = policyModifyFunction $manager $tenantApiKey $policyID $templatePolicyEVO
+                        }
+                        # This is only here to reduce the chance of hitting API rate limiting
+                        Start-Sleep -m 10
                     }
-                    else{
-                        Write-Host $TenantName", modifying policyID: "$policyID
-                        $policyModifyResults = policyModifyFunction $manager $tenantApiKey $policyID $templatePolicyName
-                    }
-                    # This is only here to reduce the chance of hitting API rate limiting
-                    Start-Sleep -m 10
+                    
+                    # Delete the API key from each tenant.
+                    write-host $TenantName", Delete temp API Key"
+                    $deleteTenantApiKeyStatus =  deleteTenantApiKey $manager $tenantApiKey $apiKeyID
                 }
-                
-                # Delete the API key from each tenant.
-                write-host $TenantName", Delete temp API Key"
-                $deleteTenantApiKeyStatus =  deleteTenantApiKey $manager $tenantApiKey $apiKeyID
+                # This is only here to reduce the chance of hitting API rate limiting
+                Start-Sleep -m 40
             }
-            # This is only here to reduce the chance of hitting API rate limiting
-            Start-Sleep -m 40
+            else {
+                write-host $tenantTemplateName", skip tenant template"
+                
+            }            
         }
     }
     else {
-        write-host "T0, Unable to find policy or Environment Variable Overrides are blank in policy: "$templatePolicyName
+        write-host $tenantTemplateName", Unable to find policy or Environment Variable Overrides are blank in policy: "$templatePolicyName
     }
 }
 else {
     Write-Host "T0, Unable to find active tenants in Deep Security Manager"
 }
+#>
+
+$deleteTenantApiKeyStatus = deleteTenantApiKey $manager $tenantTemplateApiKey $tenantTemplateApiKeyID
+write-host $tenantTemplateName", Delete temp API Key"
