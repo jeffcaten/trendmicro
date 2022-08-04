@@ -28,7 +28,7 @@ The -templateTemplateName requires the name of a tenant that you want to use as 
 The -templatePolicyName parameter requires the name of a policy. Example "Base Policy"
 
 .EXAMPLE
-.\multiTenantPolicyEnvironmentVariableOverrides.ps1 -manager <DSM Hostname> -apikey <API-Key> -templatePolicyName "<policyName>"
+.\multiTenantPolicyEnvironmentVariableOverrides.ps1 -manager <DSM Hostname> -apikey <API-Key> -tenantTemplateName "<Tenant Template Name>" -templatePolicyName "<policyName>"
 
 .NOTES
 Example script console output:
